@@ -29,3 +29,4 @@
 2026-06-28 12:40:12 - Add example
 2026-06-06 17:15:18 - Improve UI
 2026-06-12 15:12:06 - Refactor code
+2026-06-11 13:09:38 - Update README
