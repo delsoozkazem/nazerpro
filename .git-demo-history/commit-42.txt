@@ -1,0 +1,1 @@
+﻿Demo commit 42 - Git history test
