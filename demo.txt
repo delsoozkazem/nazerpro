@@ -42,3 +42,4 @@
 2026-08-27 17:44:47 - Update documentation
 2026-08-28 08:00:46 - Improve UI
 2026-08-13 08:36:23 - Minor improvements
+2026-08-01 09:09:31 - Update documentation
