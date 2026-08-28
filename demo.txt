@@ -39,3 +39,4 @@
 2026-07-05 10:24:58 - Update configuration
 2026-08-18 08:14:43 - Refactor code
 2026-08-23 17:17:08 - Add example
+2026-08-27 17:44:47 - Update documentation
