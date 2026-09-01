@@ -1,0 +1,17 @@
+{
+  "name": "nazerpro-backend",
+  "version": "1.0.0",
+  "description": "بک‌اند پلتفرم NazerPro — مدیریت و نظارت هوشمند ساختمان",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/seed.js",
+    "reset-db": "rm -f data/nazerpro.db && node src/seed.js",
+    "smoke-test": "bash scripts/smoke-test.sh"
+  },
+  "dependencies": {},
+  "notes": "این بک‌اند به‌عمد بدون هیچ وابستگی خارجی (npm dependency) نوشته شده و فقط از ماژول‌های داخلی Node.js (از جمله node:sqlite تجربی) استفاده می‌کند تا بدون نیاز به npm install و بدون دسترسی به اینترنت، مستقیماً قابل اجرا باشد. مسیر ارتقا به PostgreSQL/Prisma برای استقرار واقعی در پوشه prisma/ و docs/ مستند شده است."
+}

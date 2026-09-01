@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NazerPro | پلتفرم نظارت هوشمند ساختمان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1877F2; --primary-dark:#145DBF; --primary-light:#E7F0FE;
+    --bg:#F0F2F5; --surface:#FFFFFF; --border:#E4E6EB;
+    --text:#1C1E21; --text-2:#65676B; --text-3:#8A8D91;
+    --success:#31A24C; --success-bg:#E3F5E9;
+    --warning:#B8860B; --warning-bg:#FEF6E0;
+    --danger:#E41E3F; --danger-bg:#FDE8EA;
+    --gray:#8A8D91; --gray-bg:#F0F2F5;
+    --radius:12px; --radius-sm:8px;
+    --shadow:0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Vazirmatn',sans-serif; background:var(--bg); color:var(--text); font-size:14px; line-height:1.7;}
+  ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-thumb{background:#D0D3D8;border-radius:8px;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none;}
+  input,textarea,select{font-family:inherit; font-size:14px;}
+  a{color:inherit;text-decoration:none;}
+
+  /* ---------------- Login screen ---------------- */
+  .login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .login-card{background:var(--surface); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.12); padding:36px; width:100%; max-width:420px;}
+  .login-brand{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:22px;}
+  .login-title{font-size:19px; font-weight:800; text-align:center;}
+  .login-sub{font-size:12.5px; color:var(--text-3); text-align:center; margin-top:4px; margin-bottom:24px;}
+  .login-error{background:var(--danger-bg); color:var(--danger); font-size:12.5px; font-weight:700; padding:9px 12px; border-radius:8px; margin-bottom:14px; display:none;}
+  .quick-users{margin-top:22px; border-top:1px solid var(--border); padding-top:16px;}
+  .quick-users-title{font-size:11.5px; color:var(--text-3); font-weight:700; margin-bottom:10px;}
+  .quick-user-btn{display:flex; justify-content:space-between; align-items:center; width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--border); margin-bottom:6px; font-size:12px; text-align:right;}
+  .quick-user-btn:hover{background:var(--gray-bg); border-color:var(--primary);}
+  .quick-user-btn b{font-weight:700;}
+  .quick-user-btn span{color:var(--text-3); font-size:11px;}
+
+  /* ---------------- App shell ---------------- */
+  .app{display:flex; min-height:100vh;}
+  .sidebar{width:248px; flex-shrink:0; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; position:sticky; top:0; height:100vh;}
+  .brand{display:flex; align-items:center; gap:10px; padding:20px 18px 16px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;}
+  .brand-name{font-weight:800; font-size:17px;}
+  .brand-sub{font-size:11px; color:var(--text-3); margin-top:-2px;}
+  .nav{flex:1; padding:6px 10px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;}
+  .nav-label{font-size:11px; color:var(--text-3); font-weight:700; padding:14px 10px 6px;}
+  .nav-item{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:var(--text-2); font-weight:600; font-size:13.5px;}
+  .nav-item:hover{background:var(--gray-bg); color:var(--text);}
+  .nav-item.active{background:var(--primary-light); color:var(--primary-dark);}
+  .nav-item .badge-mini{margin-right:auto; background:var(--danger); color:#fff; font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 7px;}
+  .sidebar-footer{padding:12px; border-top:1px solid var(--border);}
+  .new-visit-btn{width:100%; background:var(--primary); color:#fff; padding:11px; border-radius:9px; font-weight:700; font-size:13.5px; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .new-visit-btn:hover{background:var(--primary-dark);}
+  .logout-link{font-size:11.5px; color:var(--text-3); display:block; text-align:center; margin-top:8px;}
+  .logout-link:hover{color:var(--danger);}
+
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{height:64px; flex-shrink:0; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; position:sticky; top:0; z-index:5;}
+  .topbar-title{font-size:16px; font-weight:700;}
+  .topbar-crumb{font-size:12.5px; color:var(--text-3); font-weight:500;}
+  .user-chip{display:flex; align-items:center; gap:9px;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  .user-name{font-weight:700; font-size:13px;}
+  .user-role{font-size:11px; color:var(--text-3);}
+  .content{padding:22px 26px 60px; max-width:1280px; width:100%; margin:0 auto;}
+
+  .grid-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px;}
+  @media(max-width:1100px){.grid-cards{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+  .stat-value{font-size:26px; font-weight:800; margin-top:10px;}
+  .stat-label{font-size:12.5px; color:var(--text-2); font-weight:600; margin-top:2px;}
+  .stat-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .card-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--border);}
+  .card-head h3{font-size:14.5px; font-weight:700;}
+  .card-body{padding:16px 18px;}
+  .section-title{font-size:15px; font-weight:800; margin:26px 0 12px;}
+  .two-col{display:grid; grid-template-columns:1.55fr 1fr; gap:16px;}
+  @media(max-width:980px){.two-col{grid-template-columns:1fr;}}
+
+  .btn{display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:8px; font-weight:700; font-size:13px;}
+  .btn-primary{background:var(--primary); color:#fff;} .btn-primary:hover{background:var(--primary-dark);}
+  .btn-outline{background:var(--surface); color:var(--text); border:1px solid var(--border);} .btn-outline:hover{background:var(--gray-bg);}
+  .btn-ghost{color:var(--primary-dark); font-weight:700;} .btn-ghost:hover{text-decoration:underline;}
+  .btn-sm{padding:6px 11px; font-size:12px;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+
+  .badge{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:20px;}
+  .badge-success{background:var(--success-bg); color:var(--success);}
+  .badge-warning{background:var(--warning-bg); color:var(--warning);}
+  .badge-danger{background:var(--danger-bg); color:var(--danger);}
+  .badge-gray{background:var(--gray-bg); color:var(--text-2);}
+  .badge-info{background:var(--primary-light); color:var(--primary-dark);}
+
+  .table{width:100%; border-collapse:collapse;}
+  .table th{text-align:right; font-size:12px; color:var(--text-3); font-weight:700; padding:10px 12px; border-bottom:1px solid var(--border);}
+  .table td{padding:12px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle;}
+  .table tr:last-child td{border-bottom:none;}
+  .table tr.clickable:hover{background:var(--gray-bg); cursor:pointer;}
+  .progress-bar{width:100%; height:7px; background:var(--gray-bg); border-radius:20px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--primary); border-radius:20px;}
+
+  .project-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); cursor:pointer;}
+  .project-card:hover{border-color:var(--primary);}
+  .proj-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media(max-width:980px){.proj-grid{grid-template-columns:1fr;}}
+
+  .breadcrumb-back{display:flex; align-items:center; gap:6px; color:var(--text-2); font-weight:600; font-size:13px; margin-bottom:12px;}
+  .breadcrumb-back:hover{color:var(--primary-dark);}
+  .proj-header{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;}
+  .proj-header h1{font-size:20px; font-weight:800;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:18px; margin-top:12px;}
+  .meta-item{font-size:12.5px;} .meta-item b{display:block; font-weight:700; color:var(--text); font-size:13.5px; margin-top:2px;}
+  .meta-item span{color:var(--text-3);}
+
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px;}
+  .tab{padding:10px 4px; margin-left:20px; font-weight:700; font-size:13.5px; color:var(--text-3); border-bottom:2px solid transparent;}
+  .tab.active{color:var(--primary-dark); border-color:var(--primary);}
+
+  .wizard-shell{display:grid; grid-template-columns:220px 1fr; gap:22px;}
+  @media(max-width:900px){.wizard-shell{grid-template-columns:1fr;}}
+  .wz-nav{display:flex; flex-direction:column; gap:2px; position:sticky; top:86px; align-self:start;}
+  .wz-nav-item{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--text-3);}
+  .wz-nav-item .n{width:20px;height:20px;border-radius:50%;background:var(--gray-bg);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;flex-shrink:0;}
+  .wz-nav-item.done{color:var(--text);} .wz-nav-item.done .n{background:var(--success); color:#fff;}
+  .wz-nav-item.active{color:var(--primary-dark); background:var(--primary-light);} .wz-nav-item.active .n{background:var(--primary); color:#fff;}
+  .wz-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px;}
+  .wz-title{font-size:16px; font-weight:800; margin-bottom:4px;}
+  .wz-sub{font-size:12.5px; color:var(--text-3); margin-bottom:18px;}
+  .wz-footer{display:flex; justify-content:space-between; margin-top:22px; padding-top:16px; border-top:1px solid var(--border);}
+
+  .option-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+  .option-card{border:1.5px solid var(--border); border-radius:10px; padding:13px 14px; cursor:pointer;}
+  .option-card:hover{border-color:var(--primary);}
+  .option-card.selected{border-color:var(--primary); background:var(--primary-light);}
+  .option-card b{font-size:13.5px; display:block;} .option-card span{font-size:11.5px; color:var(--text-3);}
+
+  .check-item{border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+  .check-item.mip{border-color:#F0C36D; background:#FFFBF2;}
+  .ci-title{font-weight:700; font-size:13.5px;}
+  .ci-flags{display:flex; gap:6px; margin-top:5px;}
+  .status-group{display:flex; gap:5px; flex-wrap:wrap;}
+  .st-btn{padding:6px 10px; border-radius:7px; font-size:11.5px; font-weight:700; border:1px solid var(--border); color:var(--text-2); white-space:nowrap;}
+  .st-btn.on-تایید{background:var(--success); border-color:var(--success); color:#fff;}
+  .st-btn.on-عدم-تایید{background:var(--danger); border-color:var(--danger); color:#fff;}
+  .st-btn.on-نیازمند-اصلاح{background:var(--warning); border-color:var(--warning); color:#fff;}
+  .st-btn.on-غیرقابل-اعمال{background:var(--gray); border-color:var(--gray); color:#fff;}
+  .st-btn.on-بررسی-نشده{background:var(--gray-bg); border-color:var(--border); color:var(--text-2);}
+  .ci-reg{font-size:11.5px; color:var(--text-3); margin-top:10px; background:var(--gray-bg); border-radius:7px; padding:8px 10px;}
+  .ci-reg b{color:var(--text-2);}
+  textarea.field, input.field, select.field{width:100%; border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-size:13px; background:var(--surface); font-family:inherit;}
+  textarea.field{resize:vertical; min-height:64px;}
+  .field-label{font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:5px; display:block;}
+  .photo-row{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;}
+  .photo-thumb{width:52px;height:52px;border-radius:8px;overflow:hidden; border:1px solid var(--border);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;}
+  .add-photo-btn{width:52px;height:52px;border-radius:8px;border:1.5px dashed var(--border); display:flex;align-items:center;justify-content:center; color:var(--text-3); position:relative; overflow:hidden;}
+  .add-photo-btn:hover{border-color:var(--primary); color:var(--primary);}
+  .add-photo-btn input{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .required-note{font-size:11px; color:var(--danger); margin-top:6px; font-weight:700;}
+
+  .attend-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);}
+  .attend-row:last-child{border-bottom:none;}
+  .seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+  .seg button{padding:6px 14px; font-size:12px; font-weight:700; color:var(--text-2);}
+  .seg button.on-present{background:var(--success-bg); color:var(--success);}
+  .seg button.on-absent{background:var(--danger-bg); color:var(--danger);}
+
+  .score-ring{width:86px;height:86px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;}
+  .disclaimer{font-size:11.5px; color:var(--text-3); background:var(--gray-bg); border-radius:8px; padding:10px 12px; margin-top:10px; line-height:1.8;}
+
+  .kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; overflow-x:auto;}
+  @media(max-width:1100px){.kanban{grid-template-columns:repeat(5,220px);}}
+  .kb-col{background:#F7F8FA; border-radius:12px; padding:10px; min-height:120px;}
+  .kb-col-head{display:flex; justify-content:space-between; font-size:12px; font-weight:800; color:var(--text-2); padding:4px 6px 10px;}
+  .kb-card{background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:11px; margin-bottom:9px; box-shadow:var(--shadow); cursor:pointer;}
+  .kb-card:hover{border-color:var(--primary);}
+  .kb-card .t{font-size:12.5px; font-weight:700; margin-bottom:5px;}
+  .kb-card .meta{font-size:10.5px; color:var(--text-3); display:flex; justify-content:space-between; align-items:center;}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .modal{background:var(--surface); border-radius:14px; max-width:560px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .modal-head{display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);}
+  .modal-body{padding:20px;}
+  .modal-close{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-3);} .modal-close:hover{background:var(--gray-bg);}
+  .ba-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0;}
+  .ba-box{border-radius:10px; overflow:hidden; border:1px solid var(--border);}
+  .ba-img{height:110px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; background:var(--gray-bg); position:relative;}
+  .ba-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+  .ba-label{padding:6px 10px; font-size:11px; font-weight:700; color:var(--text-2); background:var(--gray-bg);}
+
+  .report-page{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:34px; box-shadow:var(--shadow); max-width:820px; margin:0 auto;}
+  .rp-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--text); padding-bottom:14px; margin-bottom:18px;}
+  .rp-logo{display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px;}
+  .rp-sec{margin-bottom:18px;}
+  .rp-sec h4{font-size:12.5px; font-weight:800; color:var(--primary-dark); border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:10px;}
+  .rp-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; font-size:12.5px;}
+  .rp-grid div span{display:block; color:var(--text-3); font-size:11px;}
+  .sig-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:30px; text-align:center;}
+  .sig-box{border-top:1px solid var(--text); padding-top:8px; font-size:11.5px; color:var(--text-2);}
+  .empty{text-align:center; padding:60px 20px; color:var(--text-3);}
+  .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--primary);animation:spin .7s linear infinite;margin:0 auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-wrap{padding:60px 0; text-align:center; color:var(--text-3); font-size:12.5px;}
+  .reg-lib-row{display:flex; justify-content:space-between; align-items:center; padding:13px 4px; border-bottom:1px solid var(--border);}
+  .reg-lib-row:last-child{border-bottom:none;}
+  @media print{ .sidebar,.topbar,.no-print{display:none !important;} .content{padding:0;} .main{margin:0;} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* ============================================================================
+   NazerPro Frontend — نسخه متصل به بک‌اند واقعی (بدون داده Mock)
+   همه داده‌ها از طریق fetch به همان سروری که این فایل را سرو کرده گرفته می‌شوند.
+   ============================================================================ */
+
+const API = ''; // هم‌مبدأ (same-origin) با بک‌اند — نیازی به آدرس کامل نیست
+
+/* ---------------- ICONS ---------------- */
+function icon(name, size=18){
+  const p = {
+    home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
+    building:'<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/>',
+    alert:'<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>',
+    file:'<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/>',
+    users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14a5 5 0 0 1 5.5 5.6"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    chevL:'<path d="M15 6 9 12l6 6"/>', chevR:'<path d="M9 6l6 6-6 6"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>',
+    camera:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13.5" r="3.3"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+    doc:'<path d="M14 3H6v18h12V9l-4-6Z"/><path d="M14 3v6h4"/>',
+    empty:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
+    lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;
+}
+
+/* ---------------- AUTH & API CLIENT ---------------- */
+const auth = {
+  get token(){ return localStorage.getItem('np_token'); },
+  get refreshToken(){ return localStorage.getItem('np_refresh'); },
+  get user(){ try{ return JSON.parse(localStorage.getItem('np_user')); }catch{ return null; } },
+  set(token, refreshToken, user){
+    localStorage.setItem('np_token', token);
+    if(refreshToken) localStorage.setItem('np_refresh', refreshToken);
+    if(user) localStorage.setItem('np_user', JSON.stringify(user));
+  },
+  clear(){ localStorage.removeItem('np_token'); localStorage.removeItem('np_refresh'); localStorage.removeItem('np_user'); },
+};
+
+async function api(method, path, body){
+  const headers = {};
+  if(auth.token) headers['Authorization'] = 'Bearer ' + auth.token;
+  if(body !== undefined) headers['Content-Type'] = 'application/json';
+  let res = await fetch(API + path, { method, headers, body: body!==undefined ? JSON.stringify(body) : undefined });
+
+  if(res.status === 401 && auth.refreshToken && path !== '/api/auth/login'){
+    // تلاش برای تازه‌سازی توکن
+    const r = await fetch(API + '/api/auth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refreshToken: auth.refreshToken }) });
+    if(r.ok){
+      const d = await r.json();
+      auth.set(d.accessToken);
+      headers['Authorization'] = 'Bearer ' + d.accessToken;
+      res = await fetch(API + path, { method, headers, body: body!==undefined ? JSON.stringify(body) : undefined });
+    } else {
+      auth.clear(); location.hash = '#/login'; renderRoute(); throw new Error('نشست شما منقضی شده؛ دوباره وارد شوید');
+    }
+  }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || 'خطای ناشناخته سرور');
+  return data;
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- CONSTANTS ---------------- */
+const STAGES = ['تجهیز کارگاه','خاکبرداری','فونداسیون','اسکلت','دیوارچینی','تاسیسات','نما','نازک‌کاری','تحویل'];
+const ISSUE_FLOW = ['ثبت شده','اعلام به مجری','در حال اصلاح','تایید ناظر','بسته شده'];
+const ROLE_LABEL = { ADMIN:'مدیر سیستم', SUPERVISOR:'ناظر', CONTRACTOR:'مجری', OWNER:'مالک پروژه' };
+const QUICK_USERS = [
+  { username:'admin', password:'admin123', name:'مدیر سیستم', role:'ADMIN' },
+  { username:'rezaei', password:'pass123', name:'مهندس رضایی', role:'ناظر عمران' },
+  { username:'sadeghi', password:'pass123', name:'مهندس صادقی', role:'ناظر معماری' },
+  { username:'karimi', password:'pass123', name:'مهندس کریمی', role:'ناظر برق' },
+  { username:'sazeh_pouya', password:'pass123', name:'شرکت سازه پویا', role:'مجری' },
+  { username:'ahmadi', password:'pass123', name:'آقای احمدی', role:'مالک' },
+];
+
+/* ---------------- RENDER HELPERS ---------------- */
+function statusBadge(s){ const m={'تایید':'success','عدم تایید':'danger','نیازمند اصلاح':'warning','بررسی نشده':'gray','غیرقابل اعمال':'info'}; return `<span class="badge badge-${m[s]||'gray'}">${s}</span>`; }
+function sevBadge(s){ const m={'بحرانی':'danger','متوسط':'warning','کم':'gray'}; return `<span class="badge badge-${m[s]}">${s}</span>`; }
+function issueColor(s){ return {'ثبت شده':'gray','اعلام به مجری':'info','در حال اصلاح':'warning','تایید ناظر':'success','بسته شده':'success','رد شده':'danger'}[s]||'gray'; }
+function loadingHtml(){ return `<div class="loading-wrap"><div class="spinner"></div><div style="margin-top:10px;">در حال بارگذاری...</div></div>`; }
+function errorHtml(msg){ return `<div class="empty">${icon('alert',34)}<div style="margin-top:8px;font-weight:700;color:var(--danger);">${msg}</div></div>`; }
+function statCard(icon_,color,bg,val,label){ return `<div class="stat-card"><div class="stat-icon" style="background:${bg};color:${color}">${icon(icon_,18)}</div><div class="stat-value">${val}</div><div class="stat-label">${label}</div></div>`; }
+function fmtDate(s){ if(!s) return '—'; return s; }
+
+/* ---------------- ROUTER ---------------- */
+let currentProjectId = null;
+function navigate(hash){ location.hash = hash; }
+window.addEventListener('hashchange', renderRoute);
+
+async function renderRoute(){
+  const hash = location.hash.replace(/^#/, '') || '/dashboard';
+  if(!auth.token && hash !== '/login'){ location.hash = '#/login'; return; }
+  if(auth.token && hash === '/login'){ location.hash = '#/dashboard'; return; }
+
+  if(hash === '/login') return renderLogin();
+
+  renderShellFrame(); // اسکلت (سایدبار/تاپ‌بار) را رندر کن، محتوا را جدا لود کن
+  const set = (html) => { const el = document.getElementById('content'); if(el) el.innerHTML = html; };
+  set(loadingHtml());
+  try{
+    let html;
+    if(hash === '/dashboard') html = await viewDashboard();
+    else if(hash === '/projects') html = await viewProjects();
+    else if(hash.startsWith('/projects/')) { currentProjectId = hash.split('/')[2]; html = await viewProjectDetail(currentProjectId); }
+    else if(hash === '/wizard') html = await viewWizardShell();
+    else if(hash === '/issues') html = await viewIssues();
+    else if(hash === '/reports') html = await viewReports();
+    else if(hash.startsWith('/reports/')) html = await viewReportDetail(hash.split('/')[2]);
+    else html = errorHtml('صفحه یافت نشد');
+    set(html);
+    highlightNav(hash);
+  }catch(e){ set(errorHtml(e.message)); }
+}
+
+/* ---------------- LOGIN SCREEN ---------------- */
+function renderLogin(){
+  document.getElementById('root').innerHTML = `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-brand"><div class="brand-mark">NP</div><div style="font-weight:800;font-size:18px;">NazerPro</div></div>
+      <div class="login-title">ورود به پلتفرم</div>
+      <div class="login-sub">پلتفرم مدیریت و نظارت هوشمند ساختمان</div>
+      <div class="login-error" id="loginError"></div>
+      <form id="loginForm">
+        <label class="field-label">نام کاربری</label>
+        <input class="field" id="loginUsername" style="margin-bottom:12px;" placeholder="مثلاً rezaei" autocomplete="username" required>
+        <label class="field-label">رمز عبور</label>
+        <input class="field" id="loginPassword" type="password" style="margin-bottom:16px;" placeholder="••••••••" autocomplete="current-password" required>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" type="submit">${icon('lock',15)} ورود</button>
+      </form>
+      <div class="quick-users">
+        <div class="quick-users-title">یا با یکی از کاربران نمونه وارد شوید:</div>
+        ${QUICK_USERS.map(u=>`<button class="quick-user-btn" onclick="quickLogin('${u.username}','${u.password}')"><b>${u.name}</b><span>${u.role} — ${u.username}</span></button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    await doLogin(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);
+  });
+}
+async function quickLogin(u,p){ await doLogin(u,p); }
+async function doLogin(username, password){
+  const errBox = document.getElementById('loginError');
+  try{
+    const r = await api('POST','/api/auth/login', { username, password });
+    auth.set(r.accessToken, r.refreshToken, r.user);
+    location.hash = '#/dashboard';
+    renderRoute();
+  }catch(e){
+    if(errBox){ errBox.textContent = e.message; errBox.style.display='block'; }
+  }
+}
+function logout(){ auth.clear(); location.hash = '#/login'; renderRoute(); }
+
+/* ---------------- APP SHELL ---------------- */
+function renderShellFrame(){
+  const user = auth.user;
+  const hash = location.hash.replace(/^#/, '') || '/dashboard';
+  document.getElementById('root').innerHTML = `
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">NP</div><div><div class="brand-name">NazerPro</div><div class="brand-sub">پلتفرم نظارت هوشمند ساختمان</div></div></div>
+      ${['ADMIN','SUPERVISOR'].includes(user?.role) ? `<div class="sidebar-footer" style="border-top:none;border-bottom:1px solid var(--border);padding-top:0;"><button class="new-visit-btn" onclick="navigate('#/wizard')">${icon('plus',16)}<span>ثبت بازدید جدید</span></button></div>` : ''}
+      <nav class="nav" id="navList">
+        <a class="nav-item" data-r="/dashboard" onclick="navigate('#/dashboard')">${icon('home',17)}<span>داشبورد</span></a>
+        <a class="nav-item" data-r="/projects" onclick="navigate('#/projects')">${icon('building',17)}<span>پروژه‌ها</span></a>
+        <a class="nav-item" data-r="/issues" onclick="navigate('#/issues')">${icon('alert',17)}<span>ایرادات</span></a>
+        <a class="nav-item" data-r="/reports" onclick="navigate('#/reports')">${icon('file',17)}<span>گزارش‌ها و مینوت‌نامه</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-chip" style="margin-bottom:2px;">
+          <div class="avatar">${(user?.name||'?').trim()[0]}</div>
+          <div><div class="user-name">${user?.name||''}</div><div class="user-role">${ROLE_LABEL[user?.role]||''}${user?.discipline?(' '+user.discipline):''}</div></div>
+        </div>
+        <a class="logout-link" onclick="logout()">خروج از حساب</a>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div><div class="topbar-crumb" id="crumb"></div><div class="topbar-title" id="pageTitle"></div></div>
+      </header>
+      <div class="content" id="content"></div>
+    </div>
+  </div>`;
+}
+function highlightNav(hash){
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    const r = el.getAttribute('data-r');
+    el.classList.toggle('active', r && hash.startsWith(r));
+  });
+  const titles = {
+    '/dashboard':['خانه','داشبورد'], '/projects':['پروژه‌ها','فهرست پروژه‌ها'],
+    '/wizard':['ثبت بازدید','ویزارد بازدید و چک‌لیست'], '/issues':['مدیریت ایرادات','ایرادات'],
+    '/reports':['اسناد','گزارش‌ها و مینوت‌نامه'],
+  };
+  let key = Object.keys(titles).find(k=>hash.startsWith(k)) || '';
+  if(hash.startsWith('/projects/')) { document.getElementById('crumb').textContent='پروژه‌ها'; document.getElementById('pageTitle').textContent='جزئیات پروژه'; return; }
+  if(hash.startsWith('/reports/')) { document.getElementById('crumb').textContent='گزارش‌ها'; document.getElementById('pageTitle').textContent='مشاهده گزارش'; return; }
+  const t = titles[key] || ['',''];
+  document.getElementById('crumb').textContent = t[0];
+  document.getElementById('pageTitle').textContent = t[1];
+}
+
+/* ---------------- DASHBOARD ---------------- */
+async function viewDashboard(){
+  const [overview, projects] = await Promise.all([ api('GET','/api/analytics/overview'), api('GET','/api/projects') ]);
+  const user = auth.user;
+
+  if(user.role === 'OWNER'){
+    const p = projects[0];
+    if(!p) return `<div class="empty">${icon('empty',34)}<div>پروژه‌ای برای این مالک ثبت نشده است</div></div>`;
+    const issuesRes = await api('GET', '/api/issues?project='+p.id);
+    return `
+    <div class="grid-cards">
+      ${statCard('building','var(--primary)','var(--primary-light)', p.progress+'٪', 'پیشرفت '+p.name)}
+      ${statCard('clock','var(--text-2)','var(--gray-bg)', p.current_stage, 'مرحله فعلی')}
+      ${statCard('alert','var(--warning)','var(--warning-bg)', issuesRes.filter(i=>i.status!=='بسته شده').length, 'ایرادات باز')}
+      ${statCard('check','var(--success)','var(--success-bg)', issuesRes.filter(i=>i.status==='بسته شده').length, 'ایرادات بسته‌شده')}
+    </div>
+    <div class="card"><div class="card-head"><h3>وضعیت کلی — ${p.name}</h3></div>
+    <div class="card-body">
+      <div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+      <div style="margin-top:16px;"><button class="btn btn-outline" onclick="navigate('#/projects/${p.id}')">مشاهده جزئیات پروژه</button></div>
+    </div></div>
+    <div class="disclaimer" style="max-width:700px;">این نما بدون جزئیات فنی تخصصی طراحی شده و صرفاً برای اطلاع‌رسانی کلی به مالک پروژه است.</div>`;
+  }
+
+  if(user.role === 'CONTRACTOR'){
+    const myIssues = [];
+    for(const p of projects){ const iss = await api('GET','/api/issues?project='+p.id); myIssues.push(...iss.filter(i=>['اعلام به مجری','در حال اصلاح'].includes(i.status))); }
+    return `
+    <div class="grid-cards">
+      ${statCard('building','var(--primary)','var(--primary-light)', projects.length, 'پروژه‌های من')}
+      ${statCard('alert','var(--danger)','var(--danger-bg)', myIssues.length, 'ایرادات نیازمند اصلاح')}
+      ${statCard('file','var(--success)','var(--success-bg)', overview.readyReports, 'گزارش آماده')}
+      ${statCard('clock','var(--warning)','var(--warning-bg)', overview.openIssues, 'کل ایرادات باز')}
+    </div>
+    <div class="card"><div class="card-head"><h3>ایرادات نیازمند اقدام</h3></div>
+    <div class="card-body" style="padding-top:6px;">
+      <table class="table"><thead><tr><th>عنوان</th><th>رشته</th><th>شدت</th><th>مهلت</th><th>وضعیت</th></tr></thead>
+      <tbody>${myIssues.length ? myIssues.map(i=>`<tr class="clickable" onclick="navigate('#/issues')"><td>${i.title}</td><td>${i.discipline}</td><td>${sevBadge(i.severity)}</td><td>${fmtDate(i.due_date)}</td><td><span class="badge badge-${issueColor(i.status)}">${i.status}</span></td></tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;">ایرادی نیازمند اقدام نیست</td></tr>`}</tbody></table>
+    </div></div>`;
+  }
+
+  // ADMIN / SUPERVISOR
+  return `
+  <div class="grid-cards">
+    ${statCard('building','var(--primary)','var(--primary-light)', overview.activeProjects, 'پروژه‌های فعال')}
+    ${statCard('clock','var(--warning)','var(--warning-bg)', overview.todayVisits, 'بازدید امروز')}
+    ${statCard('alert','var(--danger)','var(--danger-bg)', overview.openIssues, 'ایرادات باز')}
+    ${statCard('file','var(--success)','var(--success-bg)', overview.readyReports, 'گزارش آماده')}
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><h3>پروژه‌های من</h3><a class="btn-ghost" onclick="navigate('#/projects')">مشاهده همه</a></div>
+      <div class="card-body" style="padding-top:6px;">
+        <table class="table"><thead><tr><th>پروژه</th><th>مرحله</th><th>پیشرفت</th><th></th></tr></thead>
+        <tbody>${projects.map(p=>`<tr class="clickable" onclick="navigate('#/projects/${p.id}')">
+          <td><b>${p.name}</b><div style="color:var(--text-3);font-size:11.5px;">${p.code}</div></td>
+          <td><span class="badge badge-info">${p.current_stage}</span></td>
+          <td style="width:140px;"><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:70px;"><div class="progress-fill" style="width:${p.progress}%"></div></div><span style="font-size:11.5px;color:var(--text-3);">${p.progress}٪</span></div></td>
+          <td>${icon('chevL',16)}</td></tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:20px;">پروژه‌ای یافت نشد</td></tr>`}</tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>وضعیت کلی سیستم</h3></div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>ایرادات بحرانی باز</span>${sevBadge('بحرانی')} <b>${overview.criticalIssues}</b></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>مینوت‌های ۷ روز اخیر</span><b>${overview.recentMinutes}</b></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;"><span>پروژه‌های تکمیل‌شده</span><b>${overview.completedProjects}</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">شروع سریع</div>
+  <div class="card"><div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="navigate('#/wizard')">${icon('plus',16)} ثبت بازدید جدید</button>
+    <button class="btn btn-outline" onclick="navigate('#/issues')">${icon('alert',16)} پیگیری ایرادات</button>
+    <button class="btn btn-outline" onclick="navigate('#/reports')">${icon('file',16)} گزارش‌های اخیر</button>
+  </div></div>`;
+}
+
+/* ---------------- PROJECTS ---------------- */
+async function viewProjects(){
+  const projects = await api('GET','/api/projects');
+  if(!projects.length) return `<div class="empty">${icon('empty',34)}<div>هیچ پروژه‌ای برای این کاربر تعریف نشده است</div></div>`;
+  return `<div class="proj-grid">${projects.map(p=>`
+    <div class="project-card" onclick="navigate('#/projects/${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div style="font-weight:800;font-size:15px;">${p.name}</div><div style="color:var(--text-3);font-size:11.5px;margin-top:2px;">${p.code} · ${p.city||''}</div></div>
+        <span class="badge badge-info">${p.current_stage}</span>
+      </div>
+      <div style="margin:14px 0 6px;"><div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%"></div></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3);"><span>${p.progress}٪ پیشرفت</span><span>${p.structure_type||''} · ${p.floors||0} طبقه</span></div>
+      <div style="display:flex;gap:5px;margin-top:12px;flex-wrap:wrap;">${(p.supervisors||[]).map(s=>`<span class="badge badge-gray">${s.discipline}</span>`).join('')}</div>
+    </div>`).join('')}</div>`;
+}
+
+/* ---------------- PROJECT DETAIL ---------------- */
+async function viewProjectDetail(id){
+  const [project, visits, issues] = await Promise.all([
+    api('GET', `/api/projects/${id}`), api('GET', `/api/projects/${id}/visits`), api('GET', `/api/issues?project=${id}`),
+  ]);
+  const curIdx = STAGES.indexOf(project.current_stage);
+  return `
+  <a class="breadcrumb-back" onclick="navigate('#/projects')">${icon('chevR',15)} بازگشت به پروژه‌ها</a>
+  <div class="proj-header">
+    <div><h1>${project.name}</h1>
+      <div class="meta-row">
+        <div class="meta-item"><span>کد پروژه</span><b>${project.code}</b></div>
+        <div class="meta-item"><span>نوع / سازه</span><b>${project.building_type||'—'} · ${project.structure_type||'—'}</b></div>
+        <div class="meta-item"><span>مالک</span><b>${project.owner?.name||'—'}</b></div>
+        <div class="meta-item"><span>مجری</span><b>${project.contractor?.name||'—'}</b></div>
+        <div class="meta-item"><span>تعداد بازدید</span><b>${visits.length}</b></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      ${['ADMIN','SUPERVISOR'].includes(auth.user.role) ? `<button class="btn btn-primary" onclick="startWizardForProject('${project.id}')">${icon('plus',15)} ثبت بازدید</button>` : ''}
+    </div>
+  </div>
+
+  <div class="section-title">مسیر پیشرفت پروژه</div>
+  <div class="card"><div class="card-body" style="overflow-x:auto;">
+    <div style="display:flex;gap:6px;min-width:700px;">${STAGES.map((s,i)=>`
+      <div style="flex:1;text-align:center;">
+        <div style="width:28px;height:28px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${i<curIdx?'var(--success)':i===curIdx?'var(--primary)':'var(--gray-bg)'};color:${i<=curIdx?'#fff':'var(--text-3)'};">${i<curIdx?icon('check',12):i+1}</div>
+        <div style="font-size:10.5px;margin-top:5px;color:${i===curIdx?'var(--primary-dark)':'var(--text-3)'};font-weight:${i===curIdx?'800':'600'};">${s}</div>
+      </div>`).join('')}</div>
+  </div></div>
+
+  <div class="section-title">بازدیدهای ثبت‌شده</div>
+  <div class="card"><div class="card-body" style="padding-top:6px;">
+    <table class="table"><thead><tr><th>تاریخ</th><th>رشته</th><th>مرحله</th></tr></thead>
+    <tbody>${visits.length ? visits.map(v=>`<tr><td>${v.date} — ${v.time}</td><td>${v.discipline}</td><td>${v.stage}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px;">هنوز بازدیدی ثبت نشده است</td></tr>`}</tbody></table>
+  </div></div>
+
+  <div class="section-title">ایرادات این پروژه</div>
+  <div class="card"><div class="card-body" style="padding-top:6px;">
+    <table class="table"><thead><tr><th>عنوان</th><th>رشته</th><th>شدت</th><th>وضعیت</th></tr></thead>
+    <tbody>${issues.length ? issues.map(i=>`<tr class="clickable" onclick="openIssueModal('${i.id}')"><td>${i.title}</td><td>${i.discipline}</td><td>${sevBadge(i.severity)}</td><td><span class="badge badge-${issueColor(i.status)}">${i.status}</span></td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:20px;">ایرادی ثبت نشده</td></tr>`}</tbody></table>
+  </div></div>`;
+}
+function startWizardForProject(id){ wz.presetProjectId = id; navigate('#/wizard'); }
+
+/* ============================================================================
+   WIZARD — متصل به POST /api/visits واقعی
+   ============================================================================ */
+const WZ_STEPS = ['پروژه','رشته','مرحله','چک‌لیست','کنترل آیتم‌ها','ثبت ایرادات','توضیحات بازدید','حضور افراد','تأیید نهایی'];
+let wz = { step:1, projectId:null, project:null, discipline:null, stage:null, checklist:null, items:{}, attendance:[
+  {roleLabel:'مالک', present:true}, {roleLabel:'مجری', present:true}, {roleLabel:'ناظر همکار', present:true},
+], notes:'', newIssues:[], presetProjectId:null, submitting:false };
+
+async function viewWizardShell(){
+  wz = { step:1, projectId: wz.presetProjectId||null, project:null, discipline:null, stage:null, checklist:null, items:{},
+    attendance:[{roleLabel:'مالک', present:true}, {roleLabel:'مجری', present:true}, {roleLabel:'ناظر همکار', present:true}],
+    notes:'', newIssues:[], presetProjectId:null, submitting:false };
+  wz.allProjects = await api('GET','/api/projects');
+  if(wz.projectId) wz.project = wz.allProjects.find(p=>p.id===wz.projectId);
+  return renderWizardFrame();
+}
+function renderWizardFrame(){
+  const stepsNav = WZ_STEPS.map((s,i)=>{ const n=i+1, cls = n<wz.step?'done':n===wz.step?'active':''; return `<div class="wz-nav-item ${cls}"><div class="n">${n<wz.step?icon('check',11):n}</div><span>${s}</span></div>`; }).join('');
+  return `<div class="wizard-shell"><div class="wz-nav">${stepsNav}</div><div class="wz-card" id="wzBody">${wzContent()}</div></div>`;
+}
+function wzRerender(){
+  const el = document.getElementById('content');
+  if(el) el.innerHTML = renderWizardFrame();
+}
+function wzContent(){
+  const fns = [null, wzStep1, wzStep2, wzStep3, wzStep4, wzStep5, wzStep6, wzStep7, wzStep8, wzStep9];
+  return fns[wz.step]();
+}
+function wzFooter(nextLabel, nextFn, canNext=true, extra=''){
+  return `${extra}<div class="wz-footer">
+    <button class="btn btn-outline" ${wz.step===1?'style="visibility:hidden"':''} onclick="wzBack()">${icon('chevR',15)} مرحله قبل</button>
+    <button class="btn btn-primary" ${canNext?'':'disabled'} id="wzNextBtn" onclick="${nextFn}">${nextLabel} ${nextLabel!=='ثبت نهایی و تولید گزارش'?icon('chevL',15):''}</button>
+  </div>`;
+}
+function wzBack(){ wz.step--; wzRerender(); }
+
+function wzStep1(){
+  return `<div class="wz-title">۱ · انتخاب پروژه</div><div class="wz-sub">پروژه‌ای که بازدید برای آن ثبت می‌شود را انتخاب کنید.</div>
+  <div class="option-grid">${wz.allProjects.map(p=>`<div class="option-card ${wz.projectId===p.id?'selected':''}" onclick="wzPickProject('${p.id}')"><b>${p.name}</b><span>${p.code} · مرحله فعلی: ${p.current_stage}</span></div>`).join('')}</div>
+  ${wzFooter('مرحله بعد','wzGoStep(2)', !!wz.projectId)}`;
+}
+function wzPickProject(id){ wz.projectId=id; wz.project = wz.allProjects.find(p=>p.id===id); wz.discipline=null; wzRerender(); }
+function wzGoStep(n){ wz.step=n; wzRerender(); }
+
+function wzStep2(){
+  const disciplines = (wz.project.supervisors||[]).map(s=>s.discipline);
+  return `<div class="wz-title">۲ · انتخاب رشته نظارت</div><div class="wz-sub">رشته مهندسی مرتبط با این بازدید را مشخص کنید.</div>
+  <div class="option-grid">${disciplines.map(d=>{ const sup = wz.project.supervisors.find(s=>s.discipline===d); return `<div class="option-card ${wz.discipline===d?'selected':''}" onclick="wzPickDisc('${d}')"><b>ناظر ${d}</b><span>مسئول: ${sup?.name||'—'}</span></div>`; }).join('')}</div>
+  ${wzFooter('مرحله بعد','wzGoStep(3)', !!wz.discipline)}`;
+}
+function wzPickDisc(d){ wz.discipline=d; wzRerender(); }
+
+function wzStep3(){
+  const curIdx = STAGES.indexOf(wz.project.current_stage);
+  return `<div class="wz-title">۳ · انتخاب مرحله ساخت</div><div class="wz-sub">مرحله فعلی پروژه به‌صورت پیش‌فرض پیشنهاد می‌شود؛ در صورت نیاز تغییر دهید.</div>
+  <div class="option-grid">${STAGES.map((s,i)=>`<div class="option-card ${wz.stage===s?'selected':''}" onclick="wzPickStage('${s}')"><b>${s}</b><span>${i===curIdx?'مرحله فعلی پروژه':i<curIdx?'مرحله گذشته':'مرحله آتی'}</span></div>`).join('')}</div>
+  ${wzFooter('مرحله بعد','wzGoStep4()', !!wz.stage)}`;
+}
+function wzPickStage(s){ wz.stage=s; wzRerender(); }
+async function wzGoStep4(){
+  wz.step=4; wzRerender();
+  const btn = document.getElementById('wzNextBtn'); if(btn) btn.disabled = true;
+  try{
+    const exact = await api('GET', `/api/checklists?discipline=${encodeURIComponent(wz.discipline)}&stage=${encodeURIComponent(wz.stage)}`);
+    if(exact.length){ wz.checklist = exact[0]; wz.checklistOptions = null; }
+    else {
+      const byDisc = await api('GET', `/api/checklists?discipline=${encodeURIComponent(wz.discipline)}`);
+      wz.checklist = null; wz.checklistOptions = byDisc;
+    }
+  }catch(e){ wz.checklist=null; wz.checklistOptions=[]; }
+  wzRerender();
+}
+function wzStep4(){
+  if(wz.checklist){
+    return `<div class="wz-title">۴ · انتخاب چک‌لیست</div><div class="wz-sub">بر اساس رشته و مرحله انتخابی، چک‌لیست مرتبط به‌صورت خودکار پیشنهاد شد.</div>
+    <div class="option-card selected" style="cursor:default;"><b>${wz.checklist.title}</b><span>${wz.checklist.version} · ${wz.checklist.items.length} آیتم کنترلی · فعال‌شده به‌صورت خودکار</span></div>
+    ${wzFooter('مرحله بعد','wzGoStep(5)', true)}`;
+  }
+  if(wz.checklistOptions && wz.checklistOptions.length){
+    return `<div class="wz-title">۴ · انتخاب چک‌لیست</div>
+    <div class="disclaimer" style="background:var(--warning-bg);color:#8a6a10;">چک‌لیست دقیقی برای مرحله «${wz.stage}» یافت نشد؛ یکی از چک‌لیست‌های موجود برای رشته «${wz.discipline}» را انتخاب کنید یا از مدیر سیستم بخواهید چک‌لیست جدید تعریف کند.</div>
+    <div class="option-grid">${wz.checklistOptions.map(c=>`<div class="option-card ${wz.checklist?.id===c.id?'selected':''}" onclick='wzPickChecklist(${JSON.stringify(c.id)})'><b>${c.title}</b><span>${c.stage} · ${c.version}</span></div>`).join('')}</div>
+    ${wzFooter('مرحله بعد','wzGoStep(5)', !!wz.checklist)}`;
+  }
+  return `<div class="wz-title">۴ · انتخاب چک‌لیست</div>
+  <div class="disclaimer" style="background:var(--danger-bg);color:var(--danger);">هیچ چک‌لیستی برای رشته «${wz.discipline}» در سیستم تعریف نشده است. ادامه ویزارد ممکن نیست تا مدیر سیستم چک‌لیست مربوط را از طریق API (POST /api/checklists) تعریف کند.</div>
+  ${wzFooter('مرحله بعد','', false)}`;
+}
+function wzPickChecklist(id){ wz.checklist = wz.checklistOptions.find(c=>c.id===id); wzRerender(); }
+
+function wzStep5(){
+  const items = wz.checklist.items;
+  items.forEach(it=>{ if(!wz.items[it.id]) wz.items[it.id] = { status:'بررسی نشده', comment:'', photos:[] }; });
+  return `<div class="wz-title">۵ · کنترل آیتم‌های چک‌لیست</div><div class="wz-sub">برای هر آیتم وضعیت را مشخص کنید. تصویر واقعی انتخاب‌شده مستقیماً به سرور ارسال می‌شود.</div>
+  ${items.map(it=>{
+    const st = wz.items[it.id];
+    const needComment = st.status==='عدم تایید'||st.status==='نیازمند اصلاح';
+    return `<div class="check-item ${it.mip?'mip':''}">
+      <div class="ci-title">${it.title}</div>
+      <div class="ci-flags">${it.mandatory?'<span class="badge badge-gray">الزامی</span>':''}${it.photo_required?'<span class="badge badge-info">عکس اجباری</span>':''}${it.mip?'<span class="badge badge-warning">نقطه بازرسی الزامی</span>':''}</div>
+      <div class="status-group" style="margin-top:10px;">
+        ${['تایید','عدم تایید','نیازمند اصلاح','غیرقابل اعمال','بررسی نشده'].map(s=>`<button class="st-btn ${st.status===s?'on-'+s.replace(/ /g,'-'):''}" onclick='wzSetStatus(${JSON.stringify(it.id)},${JSON.stringify(s)})'>${s}</button>`).join('')}
+      </div>
+      ${needComment ? `<div style="margin-top:10px;"><label class="field-label">توضیحات (اجباری)</label><textarea class="field" oninput='wzSetComment(${JSON.stringify(it.id)},this.value)'>${st.comment}</textarea></div>` : ''}
+      <div class="photo-row">
+        ${st.photos.map((p,idx)=>`<div class="photo-thumb"><img src="${p.base64}"></div>`).join('')}
+        <div class="add-photo-btn">${icon('plus',16)}<input type="file" accept="image/*" onchange='wzAddPhoto(event,${JSON.stringify(it.id)})'></div>
+        ${it.photo_required && st.photos.length===0 ? `<span class="required-note">ثبت حداقل ۱ تصویر الزامی است</span>` : ''}
+      </div>
+      <div class="ci-reg"><b>مبنای کنترل:</b> ${it.regulation_reference||'—'}${it.regulation_note?' — '+it.regulation_note:''} — ${it.regulation_verified?'استناد بررسی و تأیید شده':'<b style="color:var(--danger)">نیازمند بررسی منبع</b>'}</div>
+    </div>`;
+  }).join('')}
+  ${wzFooter('مرحله بعد','wzValidateStep5()', true)}`;
+}
+function wzSetStatus(id,s){ wz.items[id].status=s; wzRerender(); }
+function wzSetComment(id,v){ wz.items[id].comment=v; }
+async function wzAddPhoto(ev,id){
+  const file = ev.target.files[0]; if(!file) return;
+  const base64 = await fileToBase64(file);
+  wz.items[id].photos.push({ base64, description:'' });
+  wzRerender();
+}
+function wzValidateStep5(){
+  for(const it of wz.checklist.items){
+    const st = wz.items[it.id];
+    if(it.photo_required && st.photos.length<1){ alert('برای «'+it.title+'» ثبت حداقل یک تصویر الزامی است.'); return; }
+    if(['عدم تایید','نیازمند اصلاح'].includes(st.status) && !st.comment.trim()){ alert('برای «'+it.title+'» با این وضعیت، ثبت توضیحات الزامی است.'); return; }
+  }
+  wz.step=6; wzRerender();
+}
+
+function wzStep6(){
+  const failed = wz.checklist.items.filter(it=>['عدم تایید','نیازمند اصلاح'].includes(wz.items[it.id].status));
+  return `<div class="wz-title">۶ · ثبت ایرادات این بازدید</div><div class="wz-sub">${failed.length} آیتم دارای وضعیت «عدم تأیید / نیازمند اصلاح» است.</div>
+  ${failed.length===0? `<div class="empty" style="padding:30px;">${icon('check',30)}<div>هیچ آیتمی نیازمند ثبت ایراد نیست</div></div>` :
+  failed.map(it=>{ const iss = wz.newIssues.find(x=>x.itemId===it.id) || {itemId:it.id, title:it.title, description:'', severity:'متوسط', dueDate:''}; if(!wz.newIssues.find(x=>x.itemId===it.id)) wz.newIssues.push(iss);
+    return `<div class="check-item">
+      <div class="ci-title">${it.title}</div>
+      <div style="display:grid;grid-template-columns:1fr 140px 140px;gap:10px;margin-top:10px;">
+        <div><label class="field-label">شرح ایراد</label><input class="field" value="${iss.description||it.title}" oninput='wzSetIssue(${JSON.stringify(it.id)},"description",this.value)'></div>
+        <div><label class="field-label">شدت</label><select class="field" onchange='wzSetIssue(${JSON.stringify(it.id)},"severity",this.value)'>
+          <option ${iss.severity==='کم'?'selected':''}>کم</option><option ${iss.severity==='متوسط'?'selected':''}>متوسط</option><option ${iss.severity==='بحرانی'?'selected':''}>بحرانی</option></select></div>
+        <div><label class="field-label">مهلت اصلاح</label><input class="field" type="date" oninput='wzSetIssue(${JSON.stringify(it.id)},"dueDate",this.value)'></div>
+      </div>
+    </div>`; }).join('')}
+  ${wzFooter('مرحله بعد','wzGoStep(7)', true)}`;
+}
+function wzSetIssue(itemId, field, val){ const iss = wz.newIssues.find(x=>x.itemId===itemId); if(iss) iss[field]=val; }
+
+function wzStep7(){
+  return `<div class="wz-title">۷ · توضیحات کلی بازدید</div><div class="wz-sub">یادداشت‌های عمومی درباره شرایط بازدید.</div>
+  <textarea class="field" rows="6" placeholder="توضیحات بازدید…" oninput="wz.notes=this.value">${wz.notes}</textarea>
+  ${wzFooter('مرحله بعد','wzGoStep(8)', true)}`;
+}
+
+function wzStep8(){
+  return `<div class="wz-title">۸ · ثبت حضور افراد</div><div class="wz-sub">وضعیت حضور طرفین در جلسه بازدید را مشخص کنید.</div>
+  ${wz.attendance.map((a,i)=>`<div class="attend-row"><b>${a.roleLabel}</b>
+    <div class="seg"><button class="${a.present?'on-present':''}" onclick="wzSetAttend(${i},true)">حاضر</button><button class="${!a.present?'on-absent':''}" onclick="wzSetAttend(${i},false)">غایب</button></div></div>
+    ${!a.present?`<div style="margin:8px 0 4px;"><input class="field" placeholder="علت غیبت (در صورت اعلام)" oninput='wzSetAttendReason(${i},this.value)' value="${a.absentReason||''}"></div>`:''}`).join('')}
+  ${wzFooter('مرحله بعد','wzGoStep(9)', true)}`;
+}
+function wzSetAttend(i,present){ wz.attendance[i].present=present; if(present) delete wz.attendance[i].absentReason; wzRerender(); }
+function wzSetAttendReason(i,v){ wz.attendance[i].absentReason=v; }
+
+function wzStep9(){
+  const items = wz.checklist.items;
+  const applicable = items.filter(it=>wz.items[it.id].status!=='غیرقابل اعمال');
+  const ok = applicable.filter(it=>wz.items[it.id].status==='تایید');
+  const score = applicable.length ? Math.round((ok.length/applicable.length)*100) : 100;
+  return `<div class="wz-title">۹ · بازبینی و تأیید نهایی</div><div class="wz-sub">پیش از ارسال به سرور، خلاصه بازدید را بررسی کنید.</div>
+  <div class="rp-grid" style="margin-bottom:16px;">
+    <div><span>پروژه</span>${wz.project.name}</div><div><span>رشته</span>${wz.discipline}</div><div><span>مرحله</span>${wz.stage}</div>
+    <div><span>آیتم‌های تأییدشده</span>${ok.length} از ${items.length}</div><div><span>ایرادات ثبت‌شده</span>${wz.newIssues.length}</div>
+    <div><span>تصاویر</span>${items.reduce((a,it)=>a+wz.items[it.id].photos.length,0)}</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="score-ring" style="background:${score>=90?'var(--success-bg)':score>=75?'var(--warning-bg)':'var(--danger-bg)'};color:${score>=90?'var(--success)':score>=75?'var(--warning)':'var(--danger)'}">${score}٪</div>
+    <div><b>شاخص انطباق این بازدید</b><div class="disclaimer">این عدد صرفاً یک شاخص مدیریتی داخلی است و معادل تأیید قانونی نیست.</div></div>
+  </div>
+  <div id="wzSubmitError" class="login-error" style="display:none;margin-top:14px;"></div>
+  ${wzFooter('ثبت نهایی و تولید گزارش','wzSubmit()', true)}`;
+}
+
+async function wzSubmit(){
+  const btn = document.getElementById('wzNextBtn'); if(btn){ btn.disabled=true; btn.textContent='در حال ارسال...'; }
+  const now = new Date();
+  const payload = {
+    projectId: wz.project.id, discipline: wz.discipline, stage: wz.stage, checklistId: wz.checklist.id,
+    date: now.toISOString().slice(0,10), time: now.toTimeString().slice(0,5),
+    notes: wz.notes || null,
+    items: wz.checklist.items.map(it => ({ itemId: it.id, status: wz.items[it.id].status, comment: wz.items[it.id].comment||'', photos: wz.items[it.id].photos.map(p=>({base64:p.base64})) })),
+    issues: wz.newIssues.map(i => ({ itemId:i.itemId, title:i.description||i.title, description:i.description, severity:i.severity, dueDate:i.dueDate||null })),
+    attendance: wz.attendance.map(a => ({ roleLabel:a.roleLabel, present:a.present, absentReason:a.absentReason||null })),
+  };
+  try{
+    const visit = await api('POST','/api/visits', payload);
+    navigate('#/reports/'+visit.report.id);
+  }catch(e){
+    const box = document.getElementById('wzSubmitError');
+    if(box){ box.textContent = e.message; box.style.display='block'; }
+    if(btn){ btn.disabled=false; btn.textContent='ثبت نهایی و تولید گزارش'; }
+  }
+}
+
+/* ---------------- ISSUES ---------------- */
+async function viewIssues(){
+  const issues = await api('GET','/api/issues');
+  return `<div class="kanban">${ISSUE_FLOW.map(c=>`
+    <div class="kb-col"><div class="kb-col-head"><span>${c}</span><span>${issues.filter(i=>i.status===c).length}</span></div>
+      ${issues.filter(i=>i.status===c).map(i=>`<div class="kb-card" onclick="openIssueModal('${i.id}')"><div class="t">${i.title}</div><div class="meta"><span>${i.discipline}</span>${sevBadge(i.severity)}</div></div>`).join('')}
+    </div>`).join('')}</div>`;
+}
+async function openIssueModal(id){
+  document.getElementById('modalRoot')?.remove();
+  const wrap = document.createElement('div'); wrap.id='modalRoot'; document.body.appendChild(wrap);
+  wrap.innerHTML = `<div class="modal-overlay"><div class="modal"><div class="modal-body">${loadingHtml()}</div></div></div>`;
+  const i = await api('GET', `/api/issues/${id}`);
+  const idx = ISSUE_FLOW.indexOf(i.status);
+  wrap.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head"><div><b>${i.title}</b></div><button class="modal-close" onclick="closeModal()">${icon('x',16)}</button></div>
+      <div class="modal-body">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <span class="badge badge-gray">${i.discipline}</span>${sevBadge(i.severity)}<span class="badge badge-${issueColor(i.status)}">${i.status}</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-2);">${i.description||''}</p>
+        <div style="margin-top:14px;font-size:12px;color:var(--text-3);">مهلت اصلاح: ${fmtDate(i.due_date)}</div>
+
+        <div class="section-title" style="margin-top:20px;font-size:13px;">تصاویر قبل / بعد از اصلاح</div>
+        <div class="ba-grid">
+          <div class="ba-box"><div class="ba-img">${i.before_photos[0]?`<img src="/api/photos/${i.before_photos[0].id}/file">`:icon('camera',22)}</div><div class="ba-label">قبل از اصلاح</div></div>
+          <div class="ba-box"><div class="ba-img">${i.after_photos[0]?`<img src="/api/photos/${i.after_photos[0].id}/file">`:icon('camera',22)}</div><div class="ba-label">${i.after_photos[0]?'بعد از اصلاح':'در انتظار بارگذاری'}</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <label class="btn btn-outline btn-sm" style="position:relative;overflow:hidden;">${icon('camera',13)} افزودن عکس قبل<input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="uploadIssuePhoto('${i.id}','before',event)"></label>
+          <label class="btn btn-outline btn-sm" style="position:relative;overflow:hidden;">${icon('camera',13)} افزودن عکس بعد<input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="uploadIssuePhoto('${i.id}','after',event)"></label>
+        </div>
+
+        <div class="section-title" style="margin-top:6px;font-size:13px;">گردش کار</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">${ISSUE_FLOW.map((f,n)=>`<span class="badge ${n<=idx?'badge-success':'badge-gray'}">${n+1}. ${f}</span>`).join('')}</div>
+
+        <div style="display:flex;gap:8px;margin-top:20px;">
+          ${idx<ISSUE_FLOW.length-1?`<button class="btn btn-primary btn-sm" onclick="advanceIssue('${i.id}')">پیشرفت به «${ISSUE_FLOW[idx+1]}»</button>`:''}
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">بستن</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+async function uploadIssuePhoto(id, kind, ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const base64 = await fileToBase64(file);
+  try{ await api('POST', `/api/issues/${id}/photos`, { base64, kind }); openIssueModal(id); renderRoute(); }
+  catch(e){ alert(e.message); }
+}
+async function advanceIssue(id){
+  const idx = ISSUE_FLOW.indexOf((await api('GET',`/api/issues/${id}`)).status);
+  try{ await api('PATCH', `/api/issues/${id}/status`, { status: ISSUE_FLOW[idx+1] }); openIssueModal(id); renderRoute(); }
+  catch(e){ alert(e.message); }
+}
+function closeModal(){ document.getElementById('modalRoot')?.remove(); }
+
+/* ---------------- REPORTS ---------------- */
+async function viewReports(){
+  const [reports, projects, templates] = await Promise.all([
+    api('GET','/api/reports'), api('GET','/api/projects'), api('GET','/api/minute-templates'),
+  ]);
+  let minutes = [];
+  for(const p of projects){ const m = await api('GET', `/api/projects/${p.id}/minutes`); minutes.push(...m.map(x=>({...x, projectName:p.name}))); }
+  minutes.sort((a,b)=> b.created_at.localeCompare(a.created_at));
+
+  const reportsHtml = !reports.length
+    ? `<div class="empty" style="padding:30px 0;">${icon('empty',34)}<div style="margin-top:8px;">هنوز گزارشی تولید نشده است</div></div>`
+    : `<table class="table"><thead><tr><th>رشته</th><th>مرحله</th><th>تاریخ</th><th>شاخص انطباق</th><th></th></tr></thead>
+       <tbody>${reports.map(r=>`<tr class="clickable" onclick="navigate('#/reports/${r.id}')"><td>${r.discipline}</td><td>${r.stage||'—'}</td><td>${r.created_at}</td><td><span class="badge badge-${r.compliance_score>=90?'success':r.compliance_score>=75?'warning':'danger'}">${r.compliance_score??'—'}٪</span></td><td>${icon('chevL',15)}</td></tr>`).join('')}</tbody></table>`;
+
+  const canCreateMinute = ['ADMIN','SUPERVISOR'].includes(auth.user.role);
+
+  return `
+  <div class="card"><div class="card-head"><h3>گزارش‌های بازدید</h3></div><div class="card-body" style="padding-top:6px;">${reportsHtml}</div></div>
+
+  <div class="section-title">مینوت‌نامه‌ها (صورتجلسه)</div>
+  ${canCreateMinute ? `
+  <div class="card" style="margin-bottom:16px;"><div class="card-head"><h3>ایجاد مینوت جدید از قالب</h3></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+        <div><label class="field-label">پروژه</label><select class="field" id="minuteProject">${projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+        <div><label class="field-label">قالب مینوت</label><select class="field" id="minuteTemplate">${templates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
+        <button class="btn btn-primary" onclick="createMinute()">${icon('plus',14)} ایجاد</button>
+      </div>
+      <div id="minuteError" class="login-error" style="display:none;margin-top:10px;"></div>
+    </div>
+  </div>` : ''}
+
+  <div class="card"><div class="card-body" style="padding-top:6px;">
+    ${minutes.length ? `<table class="table"><thead><tr><th>شماره</th><th>پروژه</th><th>تاریخ</th><th></th></tr></thead>
+      <tbody>${minutes.map(m=>`<tr class="clickable" onclick="viewMinuteModal('${m.id}')"><td>${m.number}</td><td>${m.projectName}</td><td>${m.date}</td><td>${icon('chevL',15)}</td></tr>`).join('')}</tbody></table>`
+      : `<div class="empty" style="padding:20px 0;">هنوز مینوتی ثبت نشده است</div>`}
+  </div></div>`;
+}
+
+async function createMinute(){
+  const projectId = document.getElementById('minuteProject').value;
+  const templateId = document.getElementById('minuteTemplate').value;
+  try{
+    await api('POST','/api/minutes', { projectId, templateId });
+    renderRoute();
+  }catch(e){
+    const box = document.getElementById('minuteError');
+    if(box){ box.textContent = e.message; box.style.display='block'; }
+  }
+}
+async function viewMinuteModal(id){
+  document.getElementById('modalRoot')?.remove();
+  const wrap = document.createElement('div'); wrap.id='modalRoot'; document.body.appendChild(wrap);
+  const m = await api('GET', `/api/minutes/${id}`);
+  wrap.innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal"><div class="modal-head"><div><b>مینوت ${m.number}</b></div><button class="modal-close" onclick="closeModal()">${icon('x',16)}</button></div>
+    <div class="modal-body">${m.content_html}</div></div></div>`;
+}
+
+async function viewReportDetail(id){
+  const r = await api('GET', `/api/reports/${id}`);
+  const c = r.content;
+  return `
+  <a class="breadcrumb-back no-print" onclick="navigate('#/reports')">${icon('chevR',15)} بازگشت به گزارش‌ها</a>
+  <div class="no-print" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px;">
+    <button class="btn btn-outline btn-sm" onclick="window.print()">${icon('doc',14)} چاپ / خروجی PDF</button>
+  </div>
+  <div class="report-page">
+    <div class="rp-head">
+      <div class="rp-logo"><div class="brand-mark" style="width:28px;height:28px;font-size:12px;">NP</div>NazerPro</div>
+      <div style="text-align:left;font-size:12px;color:var(--text-3);">تاریخ صدور: ${r.created_at}</div>
+    </div>
+    <h2 style="font-size:17px;margin-bottom:14px;">گزارش بازدید — رشته ${r.discipline}</h2>
+    <div class="rp-sec"><h4>مشخصات پروژه</h4>
+      <div class="rp-grid"><div><span>نام پروژه</span>${c.project.name}</div><div><span>کد پروژه</span>${c.project.code}</div><div><span>مرحله بازدید</span>${c.stage}</div></div>
+    </div>
+    <div class="rp-sec"><h4>خلاصه چک‌لیست (${c.checklist.title} — ${c.checklist.version})</h4>
+      <table class="table"><thead><tr><th>عنوان کنترل</th><th>وضعیت</th><th>مبنای کنترل</th></tr></thead>
+      <tbody>${c.items.map(it=>`<tr><td style="font-size:12px;">${it.title}${it.comment?`<div style="color:var(--text-3);font-size:11px;margin-top:3px;">${it.comment}</div>`:''}</td><td>${statusBadge(it.status)}</td><td style="font-size:11px;color:var(--text-3);">${it.regulation.code||'—'}${it.regulation.verified?'':' — نیازمند بررسی منبع'}</td></tr>`).join('')}</tbody></table>
+    </div>
+    ${c.issues.length? `<div class="rp-sec"><h4>ایرادات ثبت‌شده</h4><table class="table"><thead><tr><th>شرح ایراد</th><th>شدت</th><th>مهلت اصلاح</th></tr></thead>
+      <tbody>${c.issues.map(i=>`<tr><td style="font-size:12px;">${i.description||i.title}</td><td>${sevBadge(i.severity)}</td><td style="font-size:12px;">${i.dueDate||'—'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${c.notes? `<div class="rp-sec"><h4>توضیحات بازدید</h4><p style="font-size:12.5px;color:var(--text-2);">${c.notes}</p></div>`:''}
+    <div class="rp-sec"><h4>شاخص انطباق و منابع و مبانی کنترل</h4>
+      <p style="font-size:12.5px;">شاخص انطباق این بازدید: <b>${c.score}٪</b> (شاخص مدیریتی داخلی)</p>
+      <div class="disclaimer">${r.disclaimer}</div>
+    </div>
+    <div class="sig-row"><div class="sig-box">امضای ناظر</div><div class="sig-box">امضای مجری</div><div class="sig-box">امضای مالک</div></div>
+  </div>`;
+}
+
+/* ---------------- INIT ---------------- */
+(async function init(){
+  if(auth.token){
+    try{ await api('GET','/api/auth/me'); }catch{ auth.clear(); }
+  }
+  renderRoute();
+})();
+</script>
+</body>
+</html>

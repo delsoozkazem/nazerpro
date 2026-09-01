@@ -1,0 +1,387 @@
+// prisma/schema.prisma
+// شمای معادل PostgreSQL برای استقرار Production.
+// این فایل در سندباکس فعلی اجرا/تست نشده (بدون دسترسی اینترنت/npm)، اما دقیقاً معادل
+// ساختار جداول src/db.js است. برای استفاده:
+//   1) npm install prisma @prisma/client
+//   2) DATABASE_URL را در .env تنظیم کنید
+//   3) npx prisma migrate dev --name init
+//   4) src/db.js را با یک Prisma-backed DAL جایگزین کنید (امضای get/all/run/tx حفظ شود)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  CONTRACTOR
+  OWNER
+}
+
+enum ProjectStatus {
+  active
+  completed
+  suspended
+}
+
+enum ChecklistStatus {
+  active
+  archived
+  draft
+}
+
+enum ResultStatus {
+  تایید
+  عدم_تایید       @map("عدم تایید")
+  نیازمند_اصلاح    @map("نیازمند اصلاح")
+  بررسی_نشده      @map("بررسی نشده")
+  غیرقابل_اعمال    @map("غیرقابل اعمال")
+}
+
+enum IssueSeverity {
+  کم
+  متوسط
+  بحرانی
+}
+
+enum IssueStatus {
+  ثبت_شده         @map("ثبت شده")
+  اعلام_به_مجری    @map("اعلام به مجری")
+  در_حال_اصلاح     @map("در حال اصلاح")
+  تایید_ناظر       @map("تایید ناظر")
+  بسته_شده        @map("بسته شده")
+  رد_شده          @map("رد شده")
+}
+
+enum PhotoKind {
+  general
+  before
+  after
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  discipline   String?
+  phone        String?
+  email        String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ownedProjects      Project[]           @relation("ProjectOwner")
+  contractedProjects Project[]           @relation("ProjectContractor")
+  supervisions       ProjectSupervisor[]
+  visits             Visit[]
+  refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model Discipline {
+  id   String @id @default(uuid())
+  name String @unique
+  code String @unique
+
+  @@map("disciplines")
+}
+
+model Project {
+  id            String   @id @default(uuid())
+  name          String
+  code          String   @unique
+  address       String?
+  city          String?
+  buildingType  String?  @map("building_type")
+  structureType String?  @map("structure_type")
+  floors        Int      @default(0)
+  ownerId       String?  @map("owner_id")
+  owner         User?    @relation("ProjectOwner", fields: [ownerId], references: [id])
+  contractorId  String?  @map("contractor_id")
+  contractor    User?    @relation("ProjectContractor", fields: [contractorId], references: [id])
+  status        ProjectStatus @default(active)
+  progress      Int      @default(0)
+  currentStage  String   @default("تجهیز کارگاه") @map("current_stage")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  supervisors ProjectSupervisor[]
+  visits      Visit[]
+  issues      Issue[]
+  photos      Photo[]
+  reports     Report[]
+  minutes     Minute[]
+  auditLogs   AuditLog[]
+
+  @@map("projects")
+}
+
+model ProjectSupervisor {
+  id         String @id @default(uuid())
+  projectId  String @map("project_id")
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId     String @map("user_id")
+  user       User   @relation(fields: [userId], references: [id])
+  discipline String
+
+  @@unique([projectId, discipline])
+  @@map("project_supervisors")
+}
+
+model Regulation {
+  id             String   @id @default(uuid())
+  code           String
+  title          String
+  version        String?
+  issueDate      String?  @map("issue_date")
+  effectiveDate  String?  @map("effective_date")
+  status         String   @default("معتبر")
+  documentUrl    String?  @map("document_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  checklists Checklist[]
+
+  @@map("regulations")
+}
+
+model Checklist {
+  id           String          @id @default(uuid())
+  title        String
+  discipline   String
+  stage        String
+  regulationId String?         @map("regulation_id")
+  regulation   Regulation?     @relation(fields: [regulationId], references: [id])
+  version      String          @default("v1.0")
+  status       ChecklistStatus @default(active)
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  items          ChecklistItem[]
+  visitChecklists VisitChecklist[]
+
+  @@map("checklists")
+}
+
+model ChecklistItem {
+  id                     String  @id @default(uuid())
+  checklistId            String  @map("checklist_id")
+  checklist              Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  title                  String
+  description            String?
+  mandatory              Boolean @default(false)
+  photoRequired          Boolean @default(false) @map("photo_required")
+  commentRequiredOnFail  Boolean @default(true) @map("comment_required_on_fail")
+  mip                    Boolean @default(false)
+  regulationReference    String? @map("regulation_reference")
+  regulationNote         String? @map("regulation_note")
+  regulationVerified     Boolean @default(false) @map("regulation_verified")
+  orderIndex             Int     @default(0) @map("order_index")
+
+  results ChecklistResult[]
+  photos  Photo[]
+
+  @@map("checklist_items")
+}
+
+model Visit {
+  id               String   @id @default(uuid())
+  projectId        String   @map("project_id")
+  project          Project  @relation(fields: [projectId], references: [id])
+  userId           String   @map("user_id")
+  user             User     @relation(fields: [userId], references: [id])
+  discipline       String
+  stage            String
+  date             String
+  time             String
+  locationLat      Float?   @map("location_lat")
+  locationLng      Float?   @map("location_lng")
+  locationVerified Boolean  @default(false) @map("location_verified")
+  weather          String?
+  notes            String?
+  status           String   @default("submitted")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  attendance VisitAttendance[]
+  checklist  VisitChecklist?
+  issues     Issue[]
+  photos     Photo[]
+  reports    Report[]
+
+  @@map("visits")
+}
+
+model VisitAttendance {
+  id           String  @id @default(uuid())
+  visitId      String  @map("visit_id")
+  visit        Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  roleLabel    String  @map("role_label")
+  present      Boolean @default(true)
+  absentReason String? @map("absent_reason")
+
+  @@map("visit_attendance")
+}
+
+model VisitChecklist {
+  id          String    @id @default(uuid())
+  visitId     String    @unique @map("visit_id")
+  visit       Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  checklistId String    @map("checklist_id")
+  checklist   Checklist @relation(fields: [checklistId], references: [id])
+  score       Int?
+  status      String    @default("completed")
+
+  results ChecklistResult[]
+
+  @@map("visit_checklists")
+}
+
+model ChecklistResult {
+  id               String         @id @default(uuid())
+  visitChecklistId String         @map("visit_checklist_id")
+  visitChecklist   VisitChecklist @relation(fields: [visitChecklistId], references: [id], onDelete: Cascade)
+  itemId           String         @map("item_id")
+  item             ChecklistItem  @relation(fields: [itemId], references: [id])
+  status           ResultStatus
+  comment          String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("checklist_results")
+}
+
+model Issue {
+  id          String        @id @default(uuid())
+  projectId   String        @map("project_id")
+  project     Project       @relation(fields: [projectId], references: [id])
+  visitId     String?       @map("visit_id")
+  visit       Visit?        @relation(fields: [visitId], references: [id])
+  discipline  String
+  title       String
+  description String?
+  location    String?
+  severity    IssueSeverity @default(متوسط)
+  status      IssueStatus   @default(ثبت_شده)
+  dueDate     String?       @map("due_date")
+  createdBy   String?       @map("created_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  closedAt    DateTime?     @map("closed_at")
+
+  history IssueStatusHistory[]
+  photos  Photo[]
+
+  @@map("issues")
+}
+
+model IssueStatusHistory {
+  id         String   @id @default(uuid())
+  issueId    String   @map("issue_id")
+  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  fromStatus String?  @map("from_status")
+  toStatus   String   @map("to_status")
+  note       String?
+  changedBy  String?  @map("changed_by")
+  changedAt  DateTime @default(now()) @map("changed_at")
+
+  @@map("issue_status_history")
+}
+
+model Photo {
+  id                    String   @id @default(uuid())
+  projectId             String?  @map("project_id")
+  project               Project? @relation(fields: [projectId], references: [id])
+  visitId               String?  @map("visit_id")
+  visit                 Visit?   @relation(fields: [visitId], references: [id])
+  issueId               String?  @map("issue_id")
+  issue                 Issue?   @relation(fields: [issueId], references: [id])
+  checklistItemId       String?  @map("checklist_item_id")
+  checklistItem         ChecklistItem? @relation(fields: [checklistItemId], references: [id])
+  kind                  PhotoKind @default(general)
+  filePath              String   @map("file_path")
+  mimeType              String?  @map("mime_type")
+  watermarkProject      String?  @map("watermark_project")
+  watermarkDate         String?  @map("watermark_date")
+  watermarkInspectionId String?  @map("watermark_inspection_id")
+  locationLat           Float?   @map("location_lat")
+  locationLng           Float?   @map("location_lng")
+  description           String?
+  uploadedBy            String?  @map("uploaded_by")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("photos")
+}
+
+model Report {
+  id               String   @id @default(uuid())
+  projectId        String   @map("project_id")
+  project          Project  @relation(fields: [projectId], references: [id])
+  visitId          String?  @map("visit_id")
+  visit            Visit?   @relation(fields: [visitId], references: [id])
+  discipline       String
+  stage            String?
+  contentJson      String   @map("content_json") // اسنپ‌شات غیرقابل‌تغییر (بخش ۵۱)
+  complianceScore  Int?     @map("compliance_score")
+  status           String   @default("draft")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("reports")
+}
+
+model MinuteTemplate {
+  id       String @id @default(uuid())
+  name     String
+  code     String @unique
+  bodyHtml String @map("body_html")
+
+  minutes Minute[]
+
+  @@map("minute_templates")
+}
+
+model Minute {
+  id          String          @id @default(uuid())
+  projectId   String          @map("project_id")
+  project     Project         @relation(fields: [projectId], references: [id])
+  templateId  String?         @map("template_id")
+  template    MinuteTemplate? @relation(fields: [templateId], references: [id])
+  number      String
+  contentHtml String          @map("content_html")
+  date        String
+  status      String          @default("draft")
+  createdBy   String?         @map("created_by")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@map("minutes")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  projectId  String?  @map("project_id")
+  project    Project? @relation(fields: [projectId], references: [id])
+  action     String
+  entity     String
+  entityId   String?  @map("entity_id")
+  beforeJson String?  @map("before_json")
+  afterJson  String?  @map("after_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,32 @@
+# docker-compose.postgres.yml
+# نمونه مرجع برای استقرار Production با PostgreSQL واقعی.
+# در سندباکس فعلی اجرا/تست نشده (بدون دسترسی اینترنت برای pull ایمیج‌ها).
+#
+# اجرا (در محیطی با دسترسی اینترنت):
+#   docker compose -f docker-compose.postgres.yml up -d
+#   psql "$DATABASE_URL" -f docs/schema.postgres.sql
+
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nazerpro
+      POSTGRES_PASSWORD: nazerpro
+      POSTGRES_DB: nazerpro
+    ports:
+      - "5432:5432"
+    volumes:
+      - nazerpro_pg_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  nazerpro_pg_data:
